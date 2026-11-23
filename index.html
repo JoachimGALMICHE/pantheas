@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pantheas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07060a;
+    --text: #e9e4d8;
+    --muted: #9a9284;
+    --stone: #3a3631;
+    --stone-light: #5d574e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+  /* ---------- Fond étoilé commun ---------- */
+  #stars { position: fixed; inset: 0; z-index: 0; }
+
+  /* ---------- Écrans ---------- */
+  .screen {
+    position: fixed; inset: 0; z-index: 1;
+    transition: opacity 1.4s ease, transform 1.4s ease, filter 1.4s ease;
+  }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* ---------- Accueil ---------- */
+  #accueil {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 1.6rem;
+    background: radial-gradient(ellipse at center, rgba(60,50,80,.25) 0%, transparent 65%);
+  }
+  #accueil.leaving { opacity: 0; transform: scale(1.15); filter: blur(8px); pointer-events: none; }
+  .sigil {
+    width: 110px; height: 110px; opacity: .85;
+    animation: spin 40s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 {
+    font-family: 'Cinzel', serif; font-weight: 800;
+    font-size: clamp(3rem, 10vw, 7.5rem); letter-spacing: .35em; margin-right: -.35em;
+    background: linear-gradient(180deg, #fff6df 0%, #c9b98f 55%, #6f6450 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 40px rgba(255,230,180,.12);
+  }
+  .tagline { font-style: italic; font-size: clamp(1.1rem, 2.2vw, 1.5rem); color: var(--muted); }
+  .btn-enter {
+    margin-top: 1.5rem; padding: 1rem 3rem;
+    font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: .4em;
+    color: var(--text); background: transparent; cursor: pointer;
+    border: 1px solid rgba(233,228,216,.35);
+    transition: all .5s ease; position: relative; overflow: hidden;
+  }
+  .btn-enter:hover {
+    border-color: rgba(233,228,216,.9); letter-spacing: .5em;
+    box-shadow: 0 0 30px rgba(255,235,200,.15), inset 0 0 20px rgba(255,235,200,.08);
+  }
+
+  /* ---------- Salle des portails ---------- */
+  #salle { display: flex; flex-direction: column; }
+  #salle.hidden { transform: scale(.92); filter: blur(6px); }
+  .salle-header {
+    padding: 1.6rem 2rem 0; display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Cinzel', serif; letter-spacing: .3em; font-size: .85rem; color: var(--muted);
+  }
+  .salle-header button {
+    background: none; border: none; color: var(--muted); font: inherit; letter-spacing: inherit; cursor: pointer;
+  }
+  .salle-header button:hover { color: var(--text); }
+  .salle-title { text-align: center; font-family: 'Cinzel', serif; font-size: clamp(1.2rem, 2.5vw, 1.8rem); letter-spacing: .4em; margin-top: .6rem; }
+
+  .hall {
+    flex: 1; display: flex; align-items: center; gap: 8vw;
+    overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+    padding: 0 calc(50vw - 170px); scroll-behavior: smooth; scrollbar-width: none;
+  }
+  .hall::-webkit-scrollbar { display: none; }
+
+  /* Sol de la salle */
+  .floor {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 28vh; pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(30,26,22,.55) 40%, rgba(15,13,11,.95) 100%);
+  }
+
+  /* ---------- Portail ---------- */
+  .portal {
+    --c: #3fd68a; --c-deep: #0d5a3a; --c-glow: rgba(63,214,138,.45);
+    position: relative; flex: 0 0 auto; scroll-snap-align: center;
+    width: 340px; height: min(560px, 68vh);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    cursor: pointer; transition: transform .6s ease;
+  }
+  .portal:hover { transform: translateY(-6px); }
+  .portal-name {
+    font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.7rem; letter-spacing: .3em; margin-right: -.3em;
+    color: var(--c); text-shadow: 0 0 18px var(--c-glow), 0 0 40px var(--c-glow);
+    margin-bottom: 1.2rem; animation: breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe { 50% { opacity: .7; text-shadow: 0 0 10px var(--c-glow); } }
+
+  .arch { position: relative; width: 100%; flex: 1; }
+  /* Intérieur de l'arche (fumée) */
+  .arch-inner {
+    position: absolute; inset: 0; overflow: hidden;
+    clip-path: url(#archClip); /* même forme exacte que l'ouverture de l'arche */
+    background: radial-gradient(ellipse at 50% 85%, var(--c-deep) 0%, #050806 75%);
+  }
+  .arch-inner canvas { width: 100%; height: 100%; display: block; }
+  /* Cadre de pierre */
+  .arch-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+    filter: drop-shadow(0 0 22px var(--c-glow)); }
+
+
+  /* Flèches de défilement */
+  .nav-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 1px solid rgba(233,228,216,.25); background: rgba(10,9,12,.5);
+    color: var(--text); font-size: 1.4rem; cursor: pointer; transition: all .3s;
+  }
+  .nav-arrow:hover { border-color: rgba(233,228,216,.8); background: rgba(40,36,30,.6); }
+  .nav-arrow.left { left: 2rem; } .nav-arrow.right { right: 2rem; }
+  .nav-arrow:disabled { opacity: .15; cursor: default; }
+
+  .hint { text-align: center; padding-bottom: 1.4rem; color: var(--muted); font-size: .95rem; font-style: italic; position: relative; z-index: 2; }
+
+  /* Flash de traversée */
+  #flash { position: fixed; inset: 0; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .9s ease; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- Forme de l'ouverture de l'arche (sert à découper la fumée) -->
+<svg width="0" height="0" style="position:absolute">
+  <clipPath id="archClip" clipPathUnits="objectBoundingBox">
+    <path d="M0.1176,1 L0.1176,0.364 Q0.1176,0.062 0.5,0.062 Q0.8824,0.062 0.8824,0.364 L0.8824,1 Z"/>
+  </clipPath>
+</svg>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="screen">
+  <svg class="sigil" viewBox="0 0 100 100" fill="none" stroke="#c9b98f" stroke-width="0.8">
+    <circle cx="50" cy="50" r="46"/>
+    <circle cx="50" cy="50" r="34"/>
+    <polygon points="50,6 88,72 12,72"/>
+    <polygon points="50,94 12,28 88,28"/>
+    <circle cx="50" cy="50" r="6"/>
+  </svg>
+  <h1>PANTHEAS</h1>
+  <p class="tagline">Franchis le seuil. Les portails t'attendent.</p>
+  <button class="btn-enter" id="btnEnter">ENTRER</button>
+</section>
+
+<!-- ============ SALLE DES PORTAILS ============ -->
+<section id="salle" class="screen hidden">
+  <div class="salle-header">
+    <button id="btnBack">← ACCUEIL</button>
+    <span id="counter">1 / 1</span>
+  </div>
+  <div class="salle-title">LA SALLE DES PORTAILS</div>
+
+  <div class="floor"></div>
+  <button class="nav-arrow left" id="prev" aria-label="Portail précédent">‹</button>
+  <button class="nav-arrow right" id="next" aria-label="Portail suivant">›</button>
+
+  <div class="hall" id="hall"><!-- portails générés en JS --></div>
+
+  <p class="hint">Fais défiler avec la molette, les flèches ou ton doigt</p>
+</section>
+
+<div id="flash"></div>
+
+<script>
+/* =========================================================
+   CONFIGURATION DES PORTAILS
+   Pour ajouter un portail : ajoute un objet dans ce tableau.
+   ========================================================= */
+const PORTAILS = [
+  {
+    nom: "Chamanisme",
+    description: "Esprits de la forêt, tambours et visions",
+    couleur: "#3fd68a",              // vert émeraude : nature, esprits, monde végétal
+    couleurProfonde: "#0d5a3a",
+    fumee: [[63,214,138], [120,240,170], [30,140,90], [200,255,220]],
+    lien: "#"                         // page vers laquelle mène le portail
+  },
+  // Exemple pour plus tard :
+  // { nom: "Alchimie", description: "...", couleur: "#e0a63a", couleurProfonde: "#5a3a0d",
+  //   fumee: [[224,166,58],[250,210,120],[150,90,20],[255,240,200]], lien: "alchimie.html" },
+];
+
+/* ---------- Ciel étoilé ---------- */
+const sc = document.getElementById('stars'), sx = sc.getContext('2d');
+let stars = [];
+function initStars() {
+  sc.width = innerWidth * devicePixelRatio; sc.height = innerHeight * devicePixelRatio;
+  stars = Array.from({length: 220}, () => ({
+    x: Math.random() * sc.width, y: Math.random() * sc.height,
+    r: Math.random() * 1.3 * devicePixelRatio, p: Math.random() * Math.PI * 2, s: .005 + Math.random() * .02
+  }));
+}
+function drawStars() {
+  sx.clearRect(0, 0, sc.width, sc.height);
+  for (const s of stars) {
+    s.p += s.s;
+    sx.globalAlpha = .25 + Math.sin(s.p) * .25 + .25;
+    sx.fillStyle = '#fff6e0';
+    sx.beginPath(); sx.arc(s.x, s.y, s.r, 0, Math.PI * 2); sx.fill();
+  }
+  requestAnimationFrame(drawStars);
+}
+initStars(); drawStars(); addEventListener('resize', initStars);
+
+/* ---------- Construction des portails ---------- */
+const hall = document.getElementById('hall');
+
+function archSVG() {
+  // Arche de pierre : piliers + voûte en ogive arrondie
+  return `
+  <svg class="arch-frame" viewBox="0 0 340 500" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="stone" x1="0" x2="1">
+        <stop offset="0" stop-color="#2a2622"/><stop offset=".5" stop-color="#5d574e"/><stop offset="1" stop-color="#2a2622"/>
+      </linearGradient>
+    </defs>
+    <!-- voûte extérieure / intérieure -->
+    <path d="M10,500 L10,175 Q10,0 170,0 Q330,0 330,175 L330,500 L296,500 L296,182 Q296,35 170,35 Q44,35 44,182 L44,500 Z"
+          fill="url(#stone)" stroke="var(--c)" stroke-opacity=".55" stroke-width="1.5"/>
+    <!-- joints de pierre -->
+    <g stroke="#1a1714" stroke-width="1.2" opacity=".8">
+      <line x1="10" y1="260" x2="44" y2="260"/><line x1="10" y1="340" x2="44" y2="340"/><line x1="10" y1="420" x2="44" y2="420"/>
+      <line x1="296" y1="260" x2="330" y2="260"/><line x1="296" y1="340" x2="330" y2="340"/><line x1="296" y1="420" x2="330" y2="420"/>
+      <line x1="16" y1="110" x2="48" y2="128"/><line x1="324" y1="110" x2="292" y2="128"/>
+      <line x1="62" y1="40" x2="82" y2="68"/><line x1="278" y1="40" x2="258" y2="68"/>
+    </g>
+    <!-- clé de voûte -->
+    <path d="M152,0 L188,0 L182,40 L158,40 Z" fill="#6b645a" stroke="var(--c)" stroke-opacity=".8"/>
+    <circle cx="170" cy="20" r="6" fill="var(--c)" opacity=".9"/>
+    <!-- socles -->
+    <rect x="0" y="480" width="54" height="20" fill="#4a453e"/>
+    <rect x="286" y="480" width="54" height="20" fill="#4a453e"/>
+  </svg>`;
+}
+
+PORTAILS.forEach((p, i) => {
+  const el = document.createElement('div');
+  el.className = 'portal';
+  el.style.setProperty('--c', p.couleur);
+  el.style.setProperty('--c-deep', p.couleurProfonde);
+  const [r, g, b] = p.fumee[0];
+  el.style.setProperty('--c-glow', `rgba(${r},${g},${b},.45)`);
+  el.innerHTML = `
+    <div class="portal-name">${p.nom.toUpperCase()}</div>
+    <div class="arch">
+      <div class="arch-inner"><canvas></canvas></div>
+      ${archSVG()}
+    </div>`;
+  el.addEventListener('click', () => traverser(p));
+  hall.appendChild(el);
+  startSmoke(el.querySelector('canvas'), p.fumee);
+});
+
+/* ---------- Fumée (particules) ---------- */
+function startSmoke(canvas, palette) {
+  const ctx = canvas.getContext('2d');
+  let W, H, parts = [];
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    W = canvas.width = Math.max(1, r.width * devicePixelRatio);
+    H = canvas.height = Math.max(1, r.height * devicePixelRatio);
+  }
+  function spawn() {
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    return {
+      x: W * (.15 + Math.random() * .7), y: H + Math.random() * H * .1,
+      vx: (Math.random() - .5) * .4, vy: -(.35 + Math.random() * .9) * devicePixelRatio,
+      size: (30 + Math.random() * 60) * devicePixelRatio, grow: .25 + Math.random() * .35,
+      life: 0, max: 260 + Math.random() * 260, c, seed: Math.random() * 1000
+    };
+  }
+  resize(); new ResizeObserver(resize).observe(canvas);
+  for (let i = 0; i < 70; i++) { const p = spawn(); p.life = Math.random() * p.max; p.y = Math.random() * H; parts.push(p); }
+
+  let t = 0;
+  (function loop() {
+    t += 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(3,6,5,0.22)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+    if (parts.length < 90) parts.push(spawn());
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.life++;
+      p.x += p.vx + Math.sin((t + p.seed) * .012) * .6 * devicePixelRatio;
+      p.y += p.vy; p.size += p.grow;
+      const k = p.life / p.max;
+      const a = Math.sin(Math.PI * Math.min(k, 1)) * .085;
+      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grd.addColorStop(0, `rgba(${p.c[0]},${p.c[1]},${p.c[2]},${a})`);
+      grd.addColorStop(1, `rgba(${p.c[0]},${p.c[1]},${p.c[2]},0)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+      if (p.life > p.max || p.y < -p.size) parts.splice(i, 1);
+    }
+    // lueur au sol du portail
+    const base = ctx.createRadialGradient(W / 2, H, 0, W / 2, H, W * .6);
+    const c0 = palette[0];
+    base.addColorStop(0, `rgba(${c0[0]},${c0[1]},${c0[2]},.06)`);
+    base.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- Navigation accueil <-> salle ---------- */
+const accueil = document.getElementById('accueil'), salle = document.getElementById('salle');
+document.getElementById('btnEnter').onclick = () => {
+  accueil.classList.add('leaving');
+  setTimeout(() => salle.classList.remove('hidden'), 500);
+};
+document.getElementById('btnBack').onclick = () => {
+  salle.classList.add('hidden');
+  setTimeout(() => accueil.classList.remove('leaving'), 400);
+};
+
+/* ---------- Défilement de la salle ---------- */
+const portals = () => [...hall.querySelectorAll('.portal')];
+const prev = document.getElementById('prev'), next = document.getElementById('next'), counter = document.getElementById('counter');
+function currentIndex() {
+  const mid = hall.scrollLeft + hall.clientWidth / 2;
+  let best = 0, d = Infinity;
+  portals().forEach((p, i) => { const c = p.offsetLeft + p.offsetWidth / 2, dd = Math.abs(c - mid); if (dd < d) { d = dd; best = i; } });
+  return best;
+}
+function goTo(i) {
+  const list = portals(); i = Math.max(0, Math.min(list.length - 1, i));
+  const p = list[i];
+  hall.scrollTo({ left: p.offsetLeft + p.offsetWidth / 2 - hall.clientWidth / 2 });
+}
+function updateNav() {
+  const i = currentIndex(), n = portals().length;
+  counter.textContent = `${i + 1} / ${n}`;
+  prev.disabled = i === 0; next.disabled = i === n - 1;
+}
+prev.onclick = () => goTo(currentIndex() - 1);
+next.onclick = () => goTo(currentIndex() + 1);
+hall.addEventListener('scroll', updateNav);
+hall.addEventListener('wheel', e => {
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); hall.scrollBy({ left: e.deltaY }); }
+}, { passive: false });
+addEventListener('keydown', e => {
+  if (salle.classList.contains('hidden')) return;
+  if (e.key === 'ArrowRight') goTo(currentIndex() + 1);
+  if (e.key === 'ArrowLeft') goTo(currentIndex() - 1);
+});
+updateNav();
+
+/* ---------- Traversée d'un portail ---------- */
+function traverser(p) {
+  const flash = document.getElementById('flash');
+  flash.style.background = `radial-gradient(circle, ${p.couleur} 0%, ${p.couleurProfonde} 60%, #000 100%)`;
+  flash.style.opacity = 1;
+  setTimeout(() => {
+    if (p.lien && p.lien !== '#') location.href = p.lien;
+    else setTimeout(() => flash.style.opacity = 0, 600);
+  }, 900);
+}
+</script>
+</body>
+</html>
