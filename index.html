@@ -95,7 +95,8 @@
   }
   .portal:hover { transform: translateY(-6px); }
   .portal-name {
-    font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.7rem; letter-spacing: .3em; margin-right: -.3em;
+    font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.45rem; letter-spacing: .25em; margin-right: -.25em;
+    text-align: center; line-height: 1.5;
     color: var(--c); text-shadow: 0 0 18px var(--c-glow), 0 0 40px var(--c-glow);
     margin-bottom: 1.2rem; animation: breathe 4s ease-in-out infinite;
   }
@@ -182,12 +183,12 @@
    ========================================================= */
 const PORTAILS = [
   {
-    nom: "Chamanisme",
-    description: "Esprits de la forêt, tambours et visions",
-    couleur: "#3fd68a",              // vert émeraude : nature, esprits, monde végétal
-    couleurProfonde: "#0d5a3a",
-    fumee: [[63,214,138], [120,240,170], [30,140,90], [200,255,220]],
-    lien: "#"                         // page vers laquelle mène le portail
+    nom: "Chamanisme Evenk",
+    description: "Taïga sibérienne, feu sacré et voyages de l'esprit",
+    couleur: "#e8743f",              // rouge-ocre des braises : feu du foyer, ocre des rochers sibériens
+    couleurProfonde: "#5a1e0c",
+    fumee: [[232,116,63], [255,165,95], [160,55,25], [255,220,175]],
+    lien: "chamanisme-evenk.html"     // page vers laquelle mène le portail
   },
   // Exemple pour plus tard :
   // { nom: "Alchimie", description: "...", couleur: "#e0a63a", couleurProfonde: "#5a3a0d",
@@ -290,7 +291,7 @@ function startSmoke(canvas, palette) {
   (function loop() {
     t += 1;
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'rgba(3,6,5,0.22)';
+    ctx.fillStyle = 'rgba(6,4,3,0.22)';
     ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
     if (parts.length < 90) parts.push(spawn());
